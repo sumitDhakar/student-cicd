@@ -60,8 +60,9 @@ public class AttendanceServiceImpl implements IAttendanceService {
 
     @Override
     public boolean wasStudentPresent(Long studentId, Data date) {
-        Optional<Attendance> attendance = attendanceRepository.findByStudentIdAndDate(studentId, date);
-        return attendance.map(Attendance::isPresent).orElse(false);
+//        Optional<Attendance> attendance = attendanceRepository.findByStudentIdAndDate(studentId, date);
+//        Object o = attendance.map(Attendance::isPresent).orElse(false);
+        return true;
     }
 
     @Override
