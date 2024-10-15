@@ -6,10 +6,12 @@ import com.example.demo.entity.Student;
 import com.example.demo.repo.AttendanceRepo;
 import com.example.demo.repo.StudentRepo;
 import com.example.demo.service.IAttendanceService;
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -54,6 +56,12 @@ public class AttendanceServiceImpl implements IAttendanceService {
             return convertToDTO(updatedAttendance);
         }
         return null;
+    }
+
+    @Override
+    public boolean wasStudentPresent(Long studentId, Data date) {
+        Optional<Attendance> attendance = attendanceRepository.findByStudentIdAndDate(studentId, date);
+        return attendance.map(Attendance::isPresent).orElse(false);
     }
 
     @Override

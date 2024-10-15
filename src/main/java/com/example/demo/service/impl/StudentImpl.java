@@ -3,12 +3,16 @@ package com.example.demo.service.impl;
 import com.example.demo.dto.StudentDto;
 import com.example.demo.dto.response.CustomResponse;
 import com.example.demo.entity.Student;
+import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.exception.exceptionhandler.ResourceAlreadPersentException;
 import com.example.demo.repo.StudentRepo;
 import com.example.demo.service.IStudentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,14 +24,25 @@ public class StudentImpl implements IStudentService {
     @Autowired
     private StudentRepo studentRepository;
 
+
+
     @Override
-    public List<StudentDto> getAllStudents() {
-        List<Student> students = studentRepository.findAll();
+    public Page<StudentDto> getAllStudents(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Student> studentPage = studentRepository.findAll(pageable);
+        return studentPage.map(this::convertToDTO);
+    }
+
+    @Override
+    public List<StudentDto> searchStudents(String name, Integer age, String status) {
+        List<Student> students = studentRepository.findByNameContainingAndAgeAndStatus(name, age, status);
         return students.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     @Override
     public StudentDto getStudentById(Long id) {
+
+
         Student student = studentRepository.findById(id).orElse(null);
         return convertToDTO(student);
     }
@@ -53,10 +68,45 @@ public class StudentImpl implements IStudentService {
     }
 
 
-
     @Override
     public void deleteStudent(Long id) {
+        // Check if the student exists
+        if (!studentRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Student not found with ID: " + id);
+        }
+
+        // Proceed to delete the student
         studentRepository.deleteById(id);
+    }
+    @Override
+    public StudentDto softDeleteStudent(Long id) {
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + id));
+
+        // Mark as deleted
+        student.setDeleted(true);
+        Student updatedStudent = studentRepository.save(student);
+        return convertToDTO(updatedStudent);
+    }
+    @Override
+    public long countTotalStudents() {
+        return studentRepository.count();
+    }
+@Override
+    public StudentDto updateStudent(Long id, StudentDto studentDto) {
+         Student existingStudent = studentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + id));
+
+        // Update fields
+        existingStudent.setName(studentDto.getName());
+        existingStudent.setAge(studentDto.getAge());
+        existingStudent.setGender(studentDto.getGender());
+        existingStudent.setAddress(studentDto.getAddress());
+        existingStudent.setPhone(studentDto.getPhone());
+        existingStudent.setStatus(studentDto.getStatus());
+              // Save updated student
+        Student updatedStudent = studentRepository.save(existingStudent);
+        return convertToDTO(updatedStudent);
     }
 
     private Student convertToEntity(StudentDto studentDTO) {

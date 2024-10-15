@@ -10,6 +10,24 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CustomResponse {
+
     private String message;
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public StudentDto getStudent() {
+        return student;
+    }
+
+    public void setStudent(StudentDto student) {
+        this.student = student;
+    }
+
     private StudentDto student;
 }
