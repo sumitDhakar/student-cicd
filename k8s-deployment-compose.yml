@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-service
+data:
+  eureka_service_address: http://parent-project-0.parent-project:8761/eureka
+  service_name: parent-project
+  mysql_host: mysql
+  mysql_port: "3306"
+  mysql_user: root
+  mysql_password: root
+  spring_profile: docker
+  eureka_server_url: http://parent-project-0.parent-project.default.svc.cluster.local:8761/eureka
+   
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: student
+  name: student
+spec:
+  # 3 Pods should exist at all times.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: student
+  template:
+    metadata:
+      labels:
+        # Apply this label to pods and default
+        # the Deployment label selector to this value
+        app: student
+    spec:
+       containers:
+        - name: student
+          # image: 844605633964.dkr.ecr.af-south-1.amazonaws.com/authentication:latest
+          image: sumitdhakar/demo-cicd:latest
+          imagePullPolicy: Always
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: docker
+            - name: PORT
+              value: "8881"
+            - name: EUREKA_SERVER_HOST
+              value: parent-project-0.parent-project
+#              valueFrom:
+#                configMapKeyRef:
+#                  name: config-service
+#                  key: spring_profile
+            - name: EUREKA_SERVER_ADDRESS
+              value: http://parent-project-0.parent-project:8761/eureka
+              
+            - name: CONFIG_SERVER_HOST
+              value: parent-project-0.parent-project
+              
+            - name: CONFIG_SERVER_PORT
+              value: "9091"
+#              valueFrom:
+#                configMapKeyRef:
+#                  name: config-service
+#                  key: eureka_service_address
+            - name: MYSQL_PORT
+              value: "3306"
+            - name: MYSQL_HOST
+              value: mysql.default.svc.cluster.local
+            - name: SERVICE_NAME
+              value: parent-project
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                  configMapKeyRef:
+                     name: config-service
+                     key: mysql_user
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                  configMapKeyRef:
+                     name: config-service
+                     key: mysql_password  
+            - name: ADMIN_FIRST_NAME
+              value: AIG
+            - name: ADMIN_LAST_NAME
+              value: ADMIN
+            - name: ADMIN_EMAIL
+              value: aig@gmail.com
+            - name: ADMIN_PASSWORD
+              value: "123456789"
+            - name: ADMIN_PHONE_NUMBER
+              value: "77468025"
+
+
+       restartPolicy: Always
+    
+
